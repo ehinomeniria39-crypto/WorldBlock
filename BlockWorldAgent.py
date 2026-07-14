@@ -1,3 +1,10 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(level=logging.DEBUG)
+
+
 class BlockWorldAgent:
     def __init__(self):
         #If you want to do any initial processing, add it here.
@@ -53,6 +60,15 @@ class BlockWorldAgent:
                     goal_on[block] = "Table"
                 else:
                     goal_on[block] = stack[index - 1] 
+                    
+		
+        logger.info("Solving Block World problem with %d blocks", len(blocks))
+        logger.debug("Initial arrangement: %s", initial_arrangement)
+        logger.debug("Goal arrangement: %s", goal_arrangement)
+        logger.debug("current: %s", block_under)
+        logger.debug("goal: %s", goal_on)			
+		
+        
         moves = []
  
         def is_clear(x):
@@ -84,9 +100,13 @@ class BlockWorldAgent:
             if destination != "Table":
                 block_above[destination] = block
             moves.append((block, destination))
+            logger.debug("Move #%d: %s -> %s (was on %s)", len(moves), block, destination, old_position)
+            
  
         #keep moving blocks until they match the goal
+        iteration = 0
         while True:
+            iteration += 1
             checked = {}
             wrong_blocks  = [block for block in blocks if not is_correct(block, checked)]
             if not wrong_blocks:
@@ -101,23 +121,27 @@ class BlockWorldAgent:
                     top_block  = block_above[top_block]
  
                 target = goal_on[top_block]
+                logger.debug("Considering block %s (climbed from %s); goal position = %s", top_block, block, target)
  
                 if target == "Table":
                     move_block(top_block , "Table")
                     moved = True
                     break
                 elif is_clear(target) and is_correct(target, checked):
+                    logger.debug("destination %s is clear and correct; placing %s there for good", target, top_block)
                     move_block(top_block, target)
                     moved = True
                     break
                 elif block_under[top_block] != "Table":
+                    logger.debug("destination %s not ready yet; unstacking %s to the table", target, top_block)
                     move_block(top_block, "Table")
                     moved = True
                     break
  
-            if not moved:
+            if not moved:              
                 break
- 
+		
+        logger.info("Solved in %d moves over %d iterations", len(moves), iteration)
         return moves
 
 
